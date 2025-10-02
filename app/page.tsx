@@ -22,26 +22,36 @@ export default function Home() {
   };
 
   const load = async () => {
-    setLoading(true);
-    let data, error;
-    if (pKaFilter) {
-      // Use RPC directly if pKaFilter is set
-      const res = await supabase.rpc('filter_compounds_by_pka', { min_pka: Number(pKaFilter) });
-      data = res.data;
-      error = res.error;
-    } else {
-      // Otherwise use the normal query
-      let query = supabase.from('mv_recent_compounds').select('id, name, formula, properties');
-      if (search) query = query.ilike('name', `%${search}%`);
-      const res = await query;
-      data = res.data;
-      error = res.error;
+    try {
+      setLoading(true);
+      const response = await fetch('/api/compounds');
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const { compounds: data } = await response.json();
+      let filteredData = data;
+      
+      if (search) {
+        filteredData = filteredData.filter((c: any) => 
+          c.name.toLowerCase().includes(search.toLowerCase())
+        );
+      }
+      
+      if (pKaFilter) {
+        filteredData = filteredData.filter((c: any) => 
+          c.properties?.pKa >= Number(pKaFilter)
+        );
+      }
+      
+      setCompounds(filteredData || []);
+      setHasP4((filteredData || []).some((x: any) => x.name === 'P4-t-Bu'));
+      localStorage.setItem('compounds', JSON.stringify(filteredData || []));
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Failed to load compounds');
+    } finally {
+      setLoading(false);
     }
-    if (error) alert(`Error: ${error.message}`);
-    setCompounds(data || []);
-    setHasP4((data || []).some((x: any) => x.name === 'P4-t-Bu'));
-    localStorage.setItem('compounds', JSON.stringify(data || []));
-    setLoading(false);
   };
 
   const debouncedSetSearch = debounce(setSearch, 300);

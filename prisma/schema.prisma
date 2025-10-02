@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Compound {
+  id             String   @id @default(cuid())
+  name           String   @unique
+  formula        String?
+  properties     Json?
+  synthesis_notes String?
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+}
+
+model CompoundProperty {
+  id          String   @id @default(cuid())
+  compound_id String
+  attribute   String
+  value       Json
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@unique([compound_id, attribute])
+}

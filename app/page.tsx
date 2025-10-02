@@ -5,7 +5,10 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Chart from 'chart.js/auto';
 
 export default function Home() {
-  const supabase = createClientComponentClient();
+  const supabase = createClientComponentClient({
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  });
   const [session, setSession] = useState<any>(null);
   const [compounds, setCompounds] = useState<any[]>([]);
   const [search, setSearch] = useState('');
